@@ -1,25 +1,41 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Bloglist from "./Bloglist";
 
 const Home = () => {
 
-    const [blogs, setBlogs] = useState([
-        { title: 'My new website', body: 'lorem ipsum...', author: 'mario', id: 1 },
-        { title: 'Welcome party!', body: 'lorem ipsum...', author: 'yoshi', id: 2 },
-        { title: 'Web dev top tips', body: 'lorem ipsum...', author: 'mario', id: 3 }
-    ])
+    const [blogs, setBlogs] = useState(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [errMessage, setErrMessage] = useState(null)
 
-    const handleDelete = (id) => {
-        setBlogs(blogs.filter(blog => blog.id !== id))
-    }
+    useEffect(() => {
+        setTimeout(() => {
+            fetch('http://localhost:8000/blogs')
+                .then(res => {
+                    if(!res.ok){
+                        throw Error('could not fetch the data for that resource')
+                    }
+                    return res.json()
+                })
+                .then((data) => {
+                    setIsLoading(false)
+                    setBlogs(data)
+                    setErrMessage(null)
+                })
+                .catch((err) => {
+                    setIsLoading(false)
+                    setErrMessage(err.message);
+                })
+        }, 500);
+    }, [])
 
     return (
 
         <div className="home">
-            <Bloglist 
-            blogs={blogs}
-            title='All blogs'
-            handleDelete={handleDelete}/>
+            {isLoading && <div>loading...</div>}
+            {blogs && <Bloglist
+                blogs={blogs}
+                title='All blogs' />}
+                {errMessage && <div>{errMessage}</div>}
         </div>
     );
 }
